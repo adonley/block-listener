@@ -1,5 +1,6 @@
 package io.block16.ethlistener.domain.jpa;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
@@ -26,12 +27,14 @@ public class EthereumAddress {
     private String symbol;
     private String iconUrl;
     private Integer decimalPlaces;
-    private Boolean contract;
+    private Boolean isContract = false;
 
+    @JsonBackReference
     @OneToMany(mappedBy = "toAddress", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 10)
     private List<EthereumTransaction> inbound = new ArrayList<>();
 
+    @JsonBackReference
     @OneToMany(mappedBy = "fromAddress", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 10)
     private List<EthereumTransaction> outbound = new ArrayList<>();
@@ -41,5 +44,18 @@ public class EthereumAddress {
         if(!this.address.isEmpty()) {
             this.address = this.address.toLowerCase();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "EthereumAddress{" +
+                "id=" + id +
+                ", address='" + address + '\'' +
+                ", name='" + name + '\'' +
+                ", symbol='" + symbol + '\'' +
+                ", iconUrl='" + iconUrl + '\'' +
+                ", decimalPlaces=" + decimalPlaces +
+                ", isContract=" + isContract +
+                '}';
     }
 }

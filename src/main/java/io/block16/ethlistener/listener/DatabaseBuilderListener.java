@@ -3,12 +3,9 @@ package io.block16.ethlistener.listener;
 import io.block16.ethlistener.domain.EthereumEvent;
 import io.block16.ethlistener.domain.EthereumTransactionType;
 import io.block16.ethlistener.domain.jpa.EthereumAddress;
-import io.block16.ethlistener.domain.jpa.EthereumContract;
 import io.block16.ethlistener.domain.jpa.EthereumTransaction;
 
 import io.block16.ethlistener.service.EthereumAddressService;
-import io.block16.ethlistener.service.EthereumContractService;
-import io.block16.ethlistener.service.TransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,38 +14,40 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class DatabaseBuilderListener {
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private EthereumAddressService ethereumAddressService;
-    private final BigInteger byzantine;
-    private final BigInteger etherToWei;
+    private final BigInteger byzantine = BigInteger.valueOf(4370000);
+    private final BigInteger etherToWei = new BigInteger("1000000000000000000");
 
     public DatabaseBuilderListener(final EthereumAddressService ethereumAddressService) {
         this.ethereumAddressService = ethereumAddressService;
-        byzantine = BigInteger.valueOf(4370000);
-        etherToWei = new BigInteger("1000000000000000000");
     }
 
-    public EthereumTransaction onBlock(EthBlock block,
+    public List<EthereumTransaction> onBlock(EthBlock block,
                         List<EthBlock> uncles,
                         List<EthBlock.TransactionObject> transactionObjects,
                         List<TransactionReceipt> transactionReceipts) {
         return this.processBlock(block, uncles, transactionObjects, transactionReceipts);
     }
 
-    public void onTransaction(EthBlock block, EthBlock.TransactionObject transactionObject, TransactionReceipt transactionReceipt) {
-        this.processTransactions(block, transactionObject);
-        this.processReceipts(block, transactionObject, transactionReceipt);
+    public List<EthereumTransaction> onTransaction(EthBlock block, EthBlock.TransactionObject transactionObject, TransactionReceipt transactionReceipt) {
+        return this.processReceipts(block, transactionObject, transactionReceipt);
     }
 
-    EthereumTransaction processBlock(EthBlock ethBlock,
+    List<EthereumTransaction> processBlock(EthBlock ethBlock,
                       List<EthBlock> unclesList,
                       List<EthBlock.TransactionObject> transactionObjects,
                       List<TransactionReceipt> transactionReceipts) {
+        List<EthereumTransaction> ethereumTransactions = new ArrayList<>(3);
+
         // 4370000 block reward 5 -> 3
         // (Uncle Number + 8 - blocknumber) * reward / 8, mined block is an uncle :D
         // gas + reward + 1/32 * blockReward per uncle (3 or 5)
@@ -68,18 +67,20 @@ public class DatabaseBuilderListener {
                 .divide(BigInteger.valueOf(32));
 
         for(EthBlock uncle: unclesList) {
-            // TODO: this can be optimized
+            // this can be optimized
             BigInteger blockDiff = uncle.getBlock().getNumber().add(BigInteger.valueOf(8)).subtract(block.getNumber());
             BigInteger rewardDivWei = minerReward.divide(BigInteger.valueOf(8));
             BigInteger uncleReward = blockDiff.multiply(rewardDivWei);
             EthereumAddress uncleAddress =
                     this.ethereumAddressService.getOrCreateByAddress(uncle.getBlock().getMiner().substring(2).toLowerCase());
+
             EthereumTransaction uncleTransaction = new EthereumTransaction();
             uncleTransaction.setTransactionType(EthereumTransactionType.UNCLE_REWARD);
             uncleTransaction.setToAddress(uncleAddress);
             uncleTransaction.setTime(new Timestamp(uncle.getBlock().getTimestamp().longValueExact() * 1000));
             uncleTransaction.setValue(uncleReward.toString());
-            this.transactionService.save(uncleTransaction);
+
+            ethereumTransactions.add(uncleTransaction);
         }
 
         BigInteger totalReward = minerReward.add(transactionGas).add(inclusionReward);
@@ -90,75 +91,91 @@ public class DatabaseBuilderListener {
         minerTransaction.setTime(new Timestamp(ethBlock.getBlock().getTimestamp().longValueExact() * 1000));
         minerTransaction.setToAddress(minerAddress);
         minerTransaction.setTransactionType(EthereumTransactionType.MINING_REWARD);
+        ethereumTransactions.add(minerTransaction);
 
         LOGGER.info("Miner Reward: {}, gas: {}, inclusion reward: {}, total: {}", minerReward, transactionGas, inclusionReward, totalReward);
-    }
-
-    /**
-     * Processes transactions within a block + block rewards / uncle rewards
-     * @param ethBlock
-     * @param transactionObject
-     */
-    List<EthereumTransaction> processTransactions(EthBlock ethBlock, EthBlock.TransactionObject transactionObject) {
-        String sender = transactionObject.getFrom().substring(2, transactionObject.getFrom().length()).toLowerCase();
-        String receiver = transactionObject.getTo();EthereumTransaction
-
-        EthereumTransaction ethereumTransaction = new EthereumTransaction();
-        ethereumTransaction.setValue(transactionObject.getValue().toString());
-        ethereumTransaction.setTransactionHash(transactionObject.getHash().startsWith("0x") ? transactionObject.getHash().substring(2) : transactionObject.getHash());
-
-        // Sender address
-        ethereumTransaction.setFromAddress(this.ethereumAddressService.getOrCreateByAddress(sender));
-        ethereumTransaction.setTime(new Timestamp(ethBlock.getBlock().getTimestamp().longValueExact() * 1000));
-
-        // Not interested in this
-        if (transactionObject.getValue().compareTo(BigInteger.valueOf(0)) <= 0) {
-            // Token transaction, creates or contract interaction
-            return;
-        }
-
-        if (receiver == null) {
-            ethereumTransaction.setToAddress(null);
-            ethereumTransaction.setTransactionType(EthereumTransactionType.CONTRACT_CREATION);
-            EthereumContract ethereumContract = this.ethereumContractService.getOrCreateContract(transactionObject.getCreates().substring(2));
-            ethereumTransaction.setEthereumContract(ethereumContract);
-            this.transactionService.save(ethereumTransaction);
-            return;
-        }
-
-        receiver = receiver.substring(2, receiver.length()).toLowerCase();
-        ethereumTransaction.setTransactionType(EthereumTransactionType.NORMAL);
-        ethereumTransaction.setToAddress(this.ethereumAddressService.getOrCreateByAddress(receiver));
-
-        this.transactionService.save(ethereumTransaction);
+        return ethereumTransactions;
     }
 
     /**
      * Looks for token transactions in ethereum logs
      */
     List<EthereumTransaction> processReceipts(EthBlock ethBlock, EthBlock.TransactionObject transactionObject, TransactionReceipt transactionReceipt) {
-        List<EthereumTransaction> tokenTransactions = new LinkedList<>();
+        List<EthereumTransaction> transactions = new LinkedList<>();
 
+        // Transaction processing without token
+        String sender = transactionObject.getFrom().substring(2, transactionObject.getFrom().length()).toLowerCase();
+        String receiver = transactionObject.getTo();
+
+        EthereumTransaction ethereumTransaction = new EthereumTransaction();
+
+        ethereumTransaction.setValue(transactionObject.getValue().toString());
+        ethereumTransaction.setTransactionHash(transactionObject.getHash().startsWith("0x") ? transactionObject.getHash().substring(2) : transactionObject.getHash());
+
+        // Sender address
+        ethereumTransaction.setFromAddress(this.ethereumAddressService.getOrCreateByAddress(sender));
+        ethereumTransaction.setTime(new Timestamp(ethBlock.getBlock().getTimestamp().longValueExact() * 1000));
+        ethereumTransaction.setBlockNumber(ethBlock.getBlock().getNumber().longValueExact());
+
+        // Not interested in this
+        /* if (transactionObject.getValue().compareTo(BigInteger.valueOf(0)) <= 0) {
+            // Token transaction, creates or contract interaction
+            return;
+        } */
+
+        if (receiver == null) {
+            ethereumTransaction.setToAddress(null);
+            ethereumTransaction.setTransactionType(EthereumTransactionType.CONTRACT_CREATION);
+            if(transactionObject.getCreates() != null) {
+                EthereumAddress ethereumContract = this.ethereumAddressService.createContractByAddress(transactionObject.getCreates().substring(2));
+                ethereumTransaction.setEthereumContract(ethereumContract);
+            }
+        } else {
+            receiver = receiver.substring(2, receiver.length()).toLowerCase();
+            EthereumAddress receiverAddress = this.ethereumAddressService.getOrCreateByAddress(receiver);
+            if (receiverAddress.getIsContract()) {
+                ethereumTransaction.setTransactionType(EthereumTransactionType.CONTRACT_TRANSACTION);
+                ethereumTransaction.setEthereumContract(receiverAddress);
+            } else {
+                ethereumTransaction.setTransactionType(EthereumTransactionType.NORMAL);
+            }
+            ethereumTransaction.setToAddress(receiverAddress);
+        }
+
+        transactions.add(ethereumTransaction);
+
+        // Token analysis
         transactionReceipt.getLogs().forEach((log -> {
             EthereumEvent ethereumEvent = new EthereumEvent(log.getAddress(), log.getTopics(), log.getData());
             if(ethereumEvent.isTokenTransfer()) {
-                String sender = ethereumEvent.getTopics().wordToAddress(1);
-                String receiver = ethereumEvent.getTopics().wordToAddress(2);
+                String tokenSender = ethereumEvent.getTopics().wordToAddress(1);
+                String tokenReceiver = ethereumEvent.getTopics().wordToAddress(2);
                 BigInteger amount = new BigInteger(ethereumEvent.getData(), 16);
                 String contractAddress = log.getAddress().substring(2);
 
-                EthereumContract ethereumContract = this.ethereumContractService.getOrCreateContract(contractAddress);
+                EthereumAddress ethereumContract = this.ethereumAddressService.getOrCreateByAddress(contractAddress);
+
+                if(!ethereumContract.getIsContract()) {
+                   ethereumContract.setIsContract(true);
+                   ethereumContract = this.ethereumAddressService.save(ethereumContract);
+                }
 
                 // Outbound token transactions
-                TokenTransaction tokenTransaction = new TokenTransaction();
+                EthereumTransaction tokenTransaction = new EthereumTransaction();
+                tokenTransaction.setBlockNumber(ethBlock.getBlock().getNumber().longValueExact());
                 tokenTransaction.setEthereumContract(ethereumContract);
-                tokenTransaction.setAmount(amount.toString());
+                tokenTransaction.setValue(amount.toString());
+                tokenTransaction.setTransactionType(EthereumTransactionType.TOKEN_TRANSACTION);
                 tokenTransaction.setTime(new Timestamp(ethBlock.getBlock().getTimestamp().longValueExact() * 1000));
-                tokenTransaction.setFromAddress(this.ethereumAddressService.getOrCreateByAddress(sender));
-                tokenTransaction.setToAddress(this.ethereumAddressService.getOrCreateByAddress(receiver));
+                tokenTransaction.setFromAddress(this.ethereumAddressService.getOrCreateByAddress(tokenSender));
+                tokenTransaction.setToAddress(this.ethereumAddressService.getOrCreateByAddress(tokenReceiver));
                 tokenTransaction.setTransactionHash(transactionObject.getHash().startsWith("0x") ? transactionObject.getHash().substring(2) : transactionObject.getHash());
-                tokenTransactions.add(tokenTransaction);
+                transactions.add(tokenTransaction);
             }
         }));
+
+        // TODO: Remove the contract transaction for token transactions
+
+        return transactions;
     }
 }

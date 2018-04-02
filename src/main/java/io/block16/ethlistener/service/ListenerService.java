@@ -54,7 +54,6 @@ public class ListenerService {
             final RedisTemplate<String, Object> redisTemplate,
             final Web3j web3j,
             final EthereumAddressService ethereumAddressService,
-            final EthereumContractService ethereumContractService,
             final TransactionService transactionService
     ) {
         this.redisTemplate = redisTemplate;
@@ -64,14 +63,15 @@ public class ListenerService {
         this.web3j = web3j;
         this.transactionService = transactionService;
 
-        this.valueOperations.set(processedBlockKey, -1);
+        // TODO: Get rid of this.
+        this.valueOperations.set(processedBlockKey, 5000000);
         int lastBlockNum = this.valueOperations.get(processedBlockKey) != null ? (Integer) this.valueOperations.get(processedBlockKey) : 0;
         this.lastProcessedBlock = new AtomicInteger(lastBlockNum);
         this.addedUpto = lastBlockNum;
         LOGGER.info("Last processed block: {}", this.lastProcessedBlock.get());
 
         // Create transaction listener
-        this.databaseBuilderListener = new DatabaseBuilderListener(ethereumAddressService, ethereumContractService);
+        this.databaseBuilderListener = new DatabaseBuilderListener(ethereumAddressService);
 
         // Listen for transactions
         this.workQueue = new LinkedBlockingQueue<>();
@@ -120,7 +120,10 @@ public class ListenerService {
                 }
 
                 Future<List<EthereumTransaction>> processedTxs = this.executorService.submit(new BlockWorker(blockNumber));
+
                 List<EthereumTransaction> transactions = processedTxs.get();
+
+                // Save if everything goes well.
                 this.transactionService.save(transactions);
                 LOGGER.info("Interesting transactions: {}, numberBlocks on queue: {}", transactions, this.workQueue.size());
 
@@ -149,7 +152,7 @@ public class ListenerService {
 
         @Override
         public List<EthereumTransaction> call() throws Exception {
-            List<EthereumTransaction> interestingTransactions = new LinkedList<>();
+            List<EthereumTransaction> interestingTransactions;
 
             BigInteger b = BigInteger.valueOf(blockNumber);
 
@@ -173,7 +176,7 @@ public class ListenerService {
             }
 
 
-            databaseBuilderListener.onBlock(block,
+            interestingTransactions = databaseBuilderListener.onBlock(block,
                     unclesList,
                     transactions.stream()
                             .map(EthBlock.TransactionResult::get)
@@ -200,7 +203,7 @@ public class ListenerService {
                 // Token transaction information
                 TransactionReceipt transactionReceipt = ethTransactionReceipt.getTransactionReceipt().get();
 
-                databaseBuilderListener.onTransaction(block, transactionObject, transactionReceipt);
+                interestingTransactions.addAll(databaseBuilderListener.onTransaction(block, transactionObject, transactionReceipt));
 
             }
 

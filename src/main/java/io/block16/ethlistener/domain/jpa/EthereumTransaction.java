@@ -1,5 +1,6 @@
 package io.block16.ethlistener.domain.jpa;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.block16.ethlistener.domain.EthereumTransactionType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,11 +20,13 @@ public class EthereumTransaction {
 
     private String value;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "to_address")
     private EthereumAddress toAddress;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "from_address")
     private EthereumAddress fromAddress;
 
@@ -33,8 +36,12 @@ public class EthereumTransaction {
 
     private String transactionHash;
 
+    private Long blockNumber;
+
     private Timestamp time;
 
     @Enumerated(EnumType.STRING)
     private EthereumTransactionType transactionType;
+
+
 }
