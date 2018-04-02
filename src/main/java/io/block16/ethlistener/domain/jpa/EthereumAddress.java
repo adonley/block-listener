@@ -20,21 +20,21 @@ public class EthereumAddress {
 
     private String address;
 
-    @OneToMany(mappedBy = "toAddress", cascade = CascadeType.ALL)
-    @BatchSize(size = 10)
-    private List<TokenTransaction> inboundTokenTransactions = new ArrayList<>();
+    private String name;
 
-    @OneToMany(mappedBy = "fromAddress", cascade = CascadeType.ALL)
-    @BatchSize(size = 10)
-    private List<TokenTransaction> outboundTokenTransactions = new ArrayList<>();
+    // token
+    private String symbol;
+    private String iconUrl;
+    private Integer decimalPlaces;
+    private Boolean contract;
 
-    @OneToMany(mappedBy = "toAddress", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "toAddress", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 10)
-    private List<EthereumTransaction> inboundEthereumTransactions = new ArrayList<>();
+    private List<EthereumTransaction> inbound = new ArrayList<>();
 
-    @OneToMany(mappedBy = "fromAddress", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "fromAddress", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 10)
-    private List<EthereumTransaction> outboundEthereumTransactions = new ArrayList<>();
+    private List<EthereumTransaction> outbound = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

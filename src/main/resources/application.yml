@@ -1,9 +1,9 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
   datasource:
-    url: jdbc:mysql://localhost:3306/ethlistener?useTimezone=true&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/listener?useTimezone=true&serverTimezone=UTC
     username: root
     password:
   properties:
@@ -42,10 +42,6 @@ io:
 
 spring:
   profiles: prod
-
-io:
-  block16:
-    nodeLocation: http://localhost:8545
 
 io:
   block16:

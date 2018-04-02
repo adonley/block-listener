@@ -1,8 +1,7 @@
 package io.block16.ethlistener.handler;
 
-import io.block16.response.exceptions.BadRequestException;
-
-import io.block16.response.exceptions.InternalServerException;
+import io.block16.ethlistener.exceptions.BadRequestException;
+import io.block16.ethlistener.exceptions.InternalServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

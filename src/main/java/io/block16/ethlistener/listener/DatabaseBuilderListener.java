@@ -6,7 +6,6 @@ import io.block16.ethlistener.domain.jpa.EthereumAddress;
 import io.block16.ethlistener.domain.jpa.EthereumContract;
 import io.block16.ethlistener.domain.jpa.EthereumTransaction;
 
-import io.block16.ethlistener.domain.jpa.TokenTransaction;
 import io.block16.ethlistener.service.EthereumAddressService;
 import io.block16.ethlistener.service.EthereumContractService;
 import io.block16.ethlistener.service.TransactionService;
@@ -25,27 +24,20 @@ public class DatabaseBuilderListener {
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private EthereumAddressService ethereumAddressService;
-    private TransactionService transactionService;
-    private EthereumContractService ethereumContractService;
     private final BigInteger byzantine;
     private final BigInteger etherToWei;
 
-    public DatabaseBuilderListener(
-            final EthereumAddressService ethereumAddressService,
-            final EthereumContractService ethereumContractService
-            ) {
+    public DatabaseBuilderListener(final EthereumAddressService ethereumAddressService) {
         this.ethereumAddressService = ethereumAddressService;
-        this.transactionService = transactionService;
-        this.ethereumContractService = ethereumContractService;
         byzantine = BigInteger.valueOf(4370000);
         etherToWei = new BigInteger("1000000000000000000");
     }
 
-    public void onBlock(EthBlock block,
+    public EthereumTransaction onBlock(EthBlock block,
                         List<EthBlock> uncles,
                         List<EthBlock.TransactionObject> transactionObjects,
                         List<TransactionReceipt> transactionReceipts) {
-        this.processBlock(block, uncles, transactionObjects, transactionReceipts);
+        return this.processBlock(block, uncles, transactionObjects, transactionReceipts);
     }
 
     public void onTransaction(EthBlock block, EthBlock.TransactionObject transactionObject, TransactionReceipt transactionReceipt) {
@@ -53,7 +45,7 @@ public class DatabaseBuilderListener {
         this.processReceipts(block, transactionObject, transactionReceipt);
     }
 
-    void processBlock(EthBlock ethBlock,
+    EthereumTransaction processBlock(EthBlock ethBlock,
                       List<EthBlock> unclesList,
                       List<EthBlock.TransactionObject> transactionObjects,
                       List<TransactionReceipt> transactionReceipts) {
@@ -98,7 +90,6 @@ public class DatabaseBuilderListener {
         minerTransaction.setTime(new Timestamp(ethBlock.getBlock().getTimestamp().longValueExact() * 1000));
         minerTransaction.setToAddress(minerAddress);
         minerTransaction.setTransactionType(EthereumTransactionType.MINING_REWARD);
-        this.transactionService.save(minerTransaction);
 
         LOGGER.info("Miner Reward: {}, gas: {}, inclusion reward: {}, total: {}", minerReward, transactionGas, inclusionReward, totalReward);
     }
@@ -108,9 +99,9 @@ public class DatabaseBuilderListener {
      * @param ethBlock
      * @param transactionObject
      */
-    void processTransactions(EthBlock ethBlock, EthBlock.TransactionObject transactionObject) {
+    List<EthereumTransaction> processTransactions(EthBlock ethBlock, EthBlock.TransactionObject transactionObject) {
         String sender = transactionObject.getFrom().substring(2, transactionObject.getFrom().length()).toLowerCase();
-        String receiver = transactionObject.getTo();
+        String receiver = transactionObject.getTo();EthereumTransaction
 
         EthereumTransaction ethereumTransaction = new EthereumTransaction();
         ethereumTransaction.setValue(transactionObject.getValue().toString());
@@ -145,8 +136,8 @@ public class DatabaseBuilderListener {
     /**
      * Looks for token transactions in ethereum logs
      */
-    void processReceipts(EthBlock ethBlock, EthBlock.TransactionObject transactionObject, TransactionReceipt transactionReceipt) {
-        List<TokenTransaction> tokenTransactions = new LinkedList<>();
+    List<EthereumTransaction> processReceipts(EthBlock ethBlock, EthBlock.TransactionObject transactionObject, TransactionReceipt transactionReceipt) {
+        List<EthereumTransaction> tokenTransactions = new LinkedList<>();
 
         transactionReceipt.getLogs().forEach((log -> {
             EthereumEvent ethereumEvent = new EthereumEvent(log.getAddress(), log.getTopics(), log.getData());

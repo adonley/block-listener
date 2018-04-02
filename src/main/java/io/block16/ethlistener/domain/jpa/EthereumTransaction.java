@@ -29,7 +29,7 @@ public class EthereumTransaction {
 
     @OneToOne(fetch = FetchType.LAZY)
     @PrimaryKeyJoinColumn
-    private EthereumContract ethereumContract;
+    private EthereumAddress ethereumContract;
 
     private String transactionHash;
 
