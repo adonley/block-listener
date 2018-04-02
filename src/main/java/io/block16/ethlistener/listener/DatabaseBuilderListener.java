@@ -174,7 +174,15 @@ public class DatabaseBuilderListener {
             }
         }));
 
-        // TODO: Remove the contract transaction for token transactions
+        // Remove the contract transaction for token transactions
+        List<EthereumTransaction> contractTransactions =
+                transactions.stream().filter(t -> t.getTransactionType() == EthereumTransactionType.CONTRACT_TRANSACTION).collect(Collectors.toList());
+        for(int i = 0; i < contractTransactions.size(); i++) {
+            EthereumTransaction contractTx = contractTransactions.get(i);
+            boolean contains = transactions.stream()
+                            .anyMatch(t -> t.getTransactionType() == EthereumTransactionType.TOKEN_TRANSACTION && t.getTransactionHash().equals(contractTx.getTransactionHash()));
+            if (contains) transactions.remove(contractTx);
+        }
 
         return transactions;
     }
