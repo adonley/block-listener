@@ -1,0 +1,52 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url: jdbc:mysql://localhost:3306/ethlistener?useTimezone=true&serverTimezone=UTC
+    username: root
+    password:
+  properties:
+    hibernate:
+      dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+
+
+logging.level.org.hibernate.SQL: debug
+
+---
+
+spring:
+  profiles: default
+
+redis:
+  hostname: localhost
+
+io:
+  block16:
+    nodeLocation: https://mainnet.infura.io/mMVAl9ZCBbtZ4sc0fBbO
+
+
+---
+
+spring:
+  profiles: compose
+
+redis:
+  hostname: redis
+
+io:
+  block16:
+    nodeLocation: https://mainnet.infura.io/mMVAl9ZCBbtZ4sc0fBbO
+
+---
+
+spring:
+  profiles: prod
+
+io:
+  block16:
+    nodeLocation: http://localhost:8545
+
+io:
+  block16:
+    nodeLocation: https://mainnet.infura.io/mMVAl9ZCBbtZ4sc0fBbO
