@@ -1,5 +1,6 @@
 package io.block16.ethlistener.service;
 
+import com.google.common.collect.Lists;
 import io.block16.ethlistener.domain.jpa.EthereumTransaction;
 import io.block16.ethlistener.listener.DatabaseBuilderListener;
 
@@ -25,6 +26,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 
@@ -33,6 +35,7 @@ public class ListenerService {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private static String processedBlockKey = "listener::ListenerService::latestBlockProcessed";
+    private static int numberOfProcessors = 8;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SetOperations<String, Object> setOperations;
@@ -74,8 +77,9 @@ public class ListenerService {
 
         // Listen for transactions
         this.workQueue = new LinkedBlockingQueue<>();
-        this.executorService = Executors.newFixedThreadPool(2);
-        this.executorService.submit(this::startWorkerManager);
+        this.executorService = Executors.newFixedThreadPool(numberOfProcessors * 2);
+        for(int i = 0; i < numberOfProcessors / 2; i++)
+            this.executorService.submit(this::startWorkerManager);
     }
 
     /**
@@ -114,9 +118,9 @@ public class ListenerService {
                 }
 
                 // Make sure consecutive blocks
-                if (blockNumber != this.lastProcessedBlock.get() + 1) {
+                /* if (blockNumber != this.lastProcessedBlock.get() + 1) {
                     throw new IllegalStateException("Block was not consecutive, lastBlock: " + blockNumber + " currentBlock " + this.lastProcessedBlock.get());
-                }
+                } */
 
                 Future<List<EthereumTransaction>> processedTxs = this.executorService.submit(new BlockWorker(blockNumber));
 
@@ -124,9 +128,10 @@ public class ListenerService {
 
                 // Save if everything goes well.
                 this.transactionService.save(transactions);
+
                 LOGGER.debug("Interesting transactions: {}, numberBlocks on queue: {}", transactions, this.workQueue.size());
 
-                // Set the last processed block
+                // Set the last processed block, guessti,ate
                 lastProcessedBlock.set(blockNumber);
                 valueOperations.set(processedBlockKey, blockNumber);
                 shouldTake = true;
@@ -151,7 +156,7 @@ public class ListenerService {
 
         @Override
         public List<EthereumTransaction> call() throws Exception {
-            List<EthereumTransaction> interestingTransactions;
+            ConcurrentLinkedQueue<EthereumTransaction> interestingTransactions = new ConcurrentLinkedQueue<EthereumTransaction>();
 
             BigInteger b = BigInteger.valueOf(blockNumber);
 
@@ -174,27 +179,26 @@ public class ListenerService {
                 throw new IllegalStateException("Receipts size was not the same as TX size.");
             }
 
+            boolean changed = false;
+            while(!changed) {
+                changed = interestingTransactions.addAll(
+                        databaseBuilderListener.onBlock(block,
+                        unclesList,
+                        transactions.stream()
+                                .map(EthBlock.TransactionResult::get)
+                                .map(EthBlock.TransactionObject.class::cast)
+                                .collect(toList()),
+                        receipts.stream()
+                                .map(EthGetTransactionReceipt::getTransactionReceipt)
+                                .filter(Optional::isPresent).map(Optional::get)
+                                .collect(Collectors.toList())));
+            }
+
             long startTime = System.nanoTime();
-            interestingTransactions = databaseBuilderListener.onBlock(block,
-                    unclesList,
-                    transactions.stream()
-                            .map(EthBlock.TransactionResult::get)
-                            .map(EthBlock.TransactionObject.class::cast)
-                            .collect(toList()),
-                    receipts.stream()
-                            .map(EthGetTransactionReceipt::getTransactionReceipt)
-                            .filter(Optional::isPresent).map(Optional::get)
-                            .collect(Collectors.toList()));
-
-            long endTime = System.nanoTime();
-            long duration = (endTime - startTime);
-            LOGGER.info("onBlock Timing: {}", (duration / 1000000.0));
-
-
-            startTime = System.nanoTime();
             // RPC for all these in this model...
             // This is busted open so we can throw without defining an interface
-            for(int i = 0; i < transactions.size(); i++) {
+
+            IntStream.range(0, transactions.size()).parallel().boxed().forEach(i -> {
                 EthGetTransactionReceipt ethTransactionReceipt = receipts.get(i);
 
                 // Ethereum Transaction information
@@ -208,13 +212,16 @@ public class ListenerService {
                 // Token transaction information
                 TransactionReceipt transactionReceipt = ethTransactionReceipt.getTransactionReceipt().get();
 
-                interestingTransactions.addAll(databaseBuilderListener.onTransaction(block, transactionObject, transactionReceipt));
-            }
-            endTime = System.nanoTime();
-            duration = (endTime - startTime);
-            LOGGER.info("onTransaction Timing: {}", (duration / 1000000));
+                boolean added = false;
+                while(!added) {
+                    added = interestingTransactions.addAll(databaseBuilderListener.onTransaction(block, transactionObject, transactionReceipt));
+                }
+            });
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime);
+            LOGGER.info("onTransaction Timing: {}, block: {}", (duration / 100000000.0), blockNumber);
 
-            return interestingTransactions;
+            return Lists.newArrayList(interestingTransactions.iterator());
         }
     }
 }

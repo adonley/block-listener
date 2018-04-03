@@ -23,8 +23,8 @@ redis:
 
 io:
   block16:
-    nodeLocation: http://localhost:8546
-    # nodeLocation: https://mainnet.infura.io/mMVAl9ZCBbtZ4sc0fBbO
+    # nodeLocation: http://localhost:8546
+    nodeLocation: https://mainnet.infura.io/mMVAl9ZCBbtZ4sc0fBbO
 
 
 ---
