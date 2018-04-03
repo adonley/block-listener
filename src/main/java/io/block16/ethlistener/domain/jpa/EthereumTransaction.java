@@ -20,18 +20,16 @@ public class EthereumTransaction {
 
     private String value;
 
-    @JsonManagedReference
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "to_address")
     private EthereumAddress toAddress;
 
-    @JsonManagedReference
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "from_address")
     private EthereumAddress fromAddress;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @PrimaryKeyJoinColumn
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ethereum_contract")
     private EthereumAddress ethereumContract;
 
     private String transactionHash;

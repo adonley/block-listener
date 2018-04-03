@@ -29,16 +29,6 @@ public class EthereumAddress {
     private Integer decimalPlaces;
     private Boolean isContract = false;
 
-    @JsonBackReference
-    @OneToMany(mappedBy = "toAddress", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @BatchSize(size = 10)
-    private List<EthereumTransaction> inbound = new ArrayList<>();
-
-    @JsonBackReference
-    @OneToMany(mappedBy = "fromAddress", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @BatchSize(size = 10)
-    private List<EthereumTransaction> outbound = new ArrayList<>();
-
     @PrePersist
     public void prePersist() {
         if(!this.address.isEmpty()) {

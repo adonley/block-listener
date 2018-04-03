@@ -1,5 +1,6 @@
 package io.block16.ethlistener.service;
 
+import io.block16.ethlistener.domain.jpa.EthereumAddress;
 import io.block16.ethlistener.domain.jpa.EthereumTransaction;
 import io.block16.ethlistener.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,5 +26,9 @@ public class TransactionService {
 
     public List<EthereumTransaction> save(List<EthereumTransaction> ethereumTransactions) {
         return this.transactionRepository.save(ethereumTransactions);
+    }
+
+    public List<EthereumTransaction> getByAddress(EthereumAddress ethereumAddress) {
+        return this.transactionRepository.getAllByAddress(ethereumAddress.getId());
     }
 }

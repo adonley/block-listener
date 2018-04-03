@@ -17,7 +17,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DatabaseBuilderListener {
@@ -79,6 +78,7 @@ public class DatabaseBuilderListener {
             uncleTransaction.setToAddress(uncleAddress);
             uncleTransaction.setTime(new Timestamp(uncle.getBlock().getTimestamp().longValueExact() * 1000));
             uncleTransaction.setValue(uncleReward.toString());
+            uncleTransaction.setBlockNumber(ethBlock.getBlock().getNumber().longValueExact());
 
             ethereumTransactions.add(uncleTransaction);
         }
@@ -91,6 +91,7 @@ public class DatabaseBuilderListener {
         minerTransaction.setTime(new Timestamp(ethBlock.getBlock().getTimestamp().longValueExact() * 1000));
         minerTransaction.setToAddress(minerAddress);
         minerTransaction.setTransactionType(EthereumTransactionType.MINING_REWARD);
+        minerTransaction.setBlockNumber(ethBlock.getBlock().getNumber().longValueExact());
         ethereumTransactions.add(minerTransaction);
 
         LOGGER.info("Miner Reward: {}, gas: {}, inclusion reward: {}, total: {}", minerReward, transactionGas, inclusionReward, totalReward);
