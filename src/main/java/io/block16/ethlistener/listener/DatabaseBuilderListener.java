@@ -61,9 +61,7 @@ public class DatabaseBuilderListener {
             transactionGas = transactionGas.add(transactionReceipts.get(i).getGasUsed().multiply(transactionObjects.get(i).getGasPrice()));
         }
 
-        BigInteger inclusionReward = BigInteger.valueOf(unclesList.size())
-                .multiply(minerReward)
-                .divide(BigInteger.valueOf(32));
+        BigInteger inclusionReward = BigInteger.valueOf(unclesList.size()).multiply(minerReward).divide(BigInteger.valueOf(32));
 
         for(EthBlock uncle: unclesList) {
             // this can be optimized
