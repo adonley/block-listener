@@ -27,7 +27,7 @@ public class EthereumAddressService {
     }
 
     public Optional<EthereumAddress> getByAddress(String address) {
-        return this.ethereumAddressRepository.getByAddress(address);
+        return this.ethereumAddressRepository.getFirstByAddress(address);
     }
 
     @CachePut(value = "ethereumAddress", key = "#ethereumAddress.address")

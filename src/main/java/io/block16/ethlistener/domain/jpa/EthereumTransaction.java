@@ -20,15 +20,15 @@ public class EthereumTransaction {
 
     private String value;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "to_address")
     private EthereumAddress toAddress;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "from_address")
     private EthereumAddress fromAddress;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "ethereum_contract")
     private EthereumAddress ethereumContract;
 

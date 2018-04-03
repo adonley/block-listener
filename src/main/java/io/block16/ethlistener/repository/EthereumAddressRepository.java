@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface EthereumAddressRepository extends JpaRepository<EthereumAddress, Long> {
     Optional<EthereumAddress> getByAddress(String address);
+    Optional<EthereumAddress> getFirstByAddress(String address);
+
 }

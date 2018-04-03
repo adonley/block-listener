@@ -35,7 +35,7 @@ public class ListenerService {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private static String processedBlockKey = "listener::ListenerService::latestBlockProcessed";
-    private static int numberOfProcessors = 8;
+    private static int numberOfProcessors = 128;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SetOperations<String, Object> setOperations;
@@ -51,6 +51,10 @@ public class ListenerService {
     private AtomicInteger lastProcessedBlock;
     private BlockingQueue<Integer> workQueue;
     private int addedUpto;
+
+    private AtomicInteger numProccessed = new AtomicInteger(0);
+    private AtomicInteger timeTaken = new AtomicInteger(0);
+    private long started = System.nanoTime();
 
     @Autowired
     public ListenerService(
@@ -78,7 +82,7 @@ public class ListenerService {
         // Listen for transactions
         this.workQueue = new LinkedBlockingQueue<>();
         this.executorService = Executors.newFixedThreadPool(numberOfProcessors * 2);
-        for(int i = 0; i < numberOfProcessors / 2; i++)
+        for(int i = 0; i < numberOfProcessors; i++)
             this.executorService.submit(this::startWorkerManager);
     }
 
@@ -113,6 +117,8 @@ public class ListenerService {
 
         while (true) {
             try {
+                long startTime = System.nanoTime();
+
                 if (shouldTake) {
                     blockNumber = this.workQueue.take();
                 }
@@ -128,13 +134,21 @@ public class ListenerService {
 
                 // Save if everything goes well.
                 this.transactionService.save(transactions);
-
-                LOGGER.debug("Interesting transactions: {}, numberBlocks on queue: {}", transactions, this.workQueue.size());
+                // LOGGER.debug("Interesting transactions: {}, numberBlocks on queue: {}", transactions, this.workQueue.size());
 
                 // Set the last processed block, guessti,ate
                 lastProcessedBlock.set(blockNumber);
                 valueOperations.set(processedBlockKey, blockNumber);
                 shouldTake = true;
+
+                long endTime = System.nanoTime();
+                long duration = (endTime - startTime);
+
+                Integer taken = timeTaken.addAndGet((int)TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS));
+                int processed = numProccessed.incrementAndGet();
+                LOGGER.info("Avg Timing: {}, block: {}", TimeUnit.SECONDS.convert(taken / processed, TimeUnit.MILLISECONDS), blockNumber);
+                LOGGER.info("Blocks Per Second: {}, block: {}", processed / new Double(endTime - started) * 1000000000.0, blockNumber);
+
             } catch (InterruptedException ie) {
                 shouldTake = false;
                 LOGGER.error("Thread was interrupted when trying to pull block work");
@@ -198,11 +212,12 @@ public class ListenerService {
             // RPC for all these in this model...
             // This is busted open so we can throw without defining an interface
 
-            IntStream.range(0, transactions.size()).parallel().boxed().forEach(i -> {
+            // IntStream.range(0, transactions.size()).parallel().boxed().forEach(i -> {
+            for(int i = 0; i < transactions.size(); i++) {
                 EthGetTransactionReceipt ethTransactionReceipt = receipts.get(i);
 
                 // Ethereum Transaction information
-                EthBlock.TransactionObject transactionObject =  (EthBlock.TransactionObject)transactions.get(i).get();
+                EthBlock.TransactionObject transactionObject = (EthBlock.TransactionObject) transactions.get(i).get();
 
                 if (!ethTransactionReceipt.getTransactionReceipt().isPresent()) {
                     LOGGER.error("Assumption that transaction receipt should be present was false.");
@@ -213,13 +228,11 @@ public class ListenerService {
                 TransactionReceipt transactionReceipt = ethTransactionReceipt.getTransactionReceipt().get();
 
                 boolean added = false;
-                while(!added) {
+                while (!added) {
                     added = interestingTransactions.addAll(databaseBuilderListener.onTransaction(block, transactionObject, transactionReceipt));
                 }
-            });
-            long endTime = System.nanoTime();
-            long duration = (endTime - startTime);
-            LOGGER.info("onTransaction Timing: {}, block: {}", (duration / 100000000.0), blockNumber);
+            }
+            // });
 
             return Lists.newArrayList(interestingTransactions.iterator());
         }
