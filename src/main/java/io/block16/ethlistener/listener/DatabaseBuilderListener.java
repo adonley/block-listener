@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class DatabaseBuilderListener {
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
@@ -92,7 +93,7 @@ public class DatabaseBuilderListener {
         minerTransaction.setBlockNumber(ethBlock.getBlock().getNumber().longValueExact());
         ethereumTransactions.add(minerTransaction);
 
-        LOGGER.info("Miner Reward: {}, gas: {}, inclusion reward: {}, total: {}", minerReward, transactionGas, inclusionReward, totalReward);
+        LOGGER.debug("Miner Reward: {}, gas: {}, inclusion reward: {}, total: {}", minerReward, transactionGas, inclusionReward, totalReward);
         return ethereumTransactions;
     }
 

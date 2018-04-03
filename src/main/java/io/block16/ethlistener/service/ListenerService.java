@@ -63,9 +63,8 @@ public class ListenerService {
         this.web3j = web3j;
         this.transactionService = transactionService;
 
-        // TODO: Get rid of this.
-        this.valueOperations.set(processedBlockKey, 5000000);
-        int lastBlockNum = this.valueOperations.get(processedBlockKey) != null ? (Integer) this.valueOperations.get(processedBlockKey) : 0;
+        // this.valueOperations.set(processedBlockKey, 5000000);
+        int lastBlockNum = this.valueOperations.get(processedBlockKey) != null ? (Integer) this.valueOperations.get(processedBlockKey) : -1;
         this.lastProcessedBlock = new AtomicInteger(lastBlockNum);
         this.addedUpto = lastBlockNum;
         LOGGER.info("Last processed block: {}", this.lastProcessedBlock.get());
@@ -125,7 +124,7 @@ public class ListenerService {
 
                 // Save if everything goes well.
                 this.transactionService.save(transactions);
-                LOGGER.info("Interesting transactions: {}, numberBlocks on queue: {}", transactions, this.workQueue.size());
+                LOGGER.debug("Interesting transactions: {}, numberBlocks on queue: {}", transactions, this.workQueue.size());
 
                 // Set the last processed block
                 lastProcessedBlock.set(blockNumber);
@@ -175,7 +174,7 @@ public class ListenerService {
                 throw new IllegalStateException("Receipts size was not the same as TX size.");
             }
 
-
+            long startTime = System.nanoTime();
             interestingTransactions = databaseBuilderListener.onBlock(block,
                     unclesList,
                     transactions.stream()
@@ -187,6 +186,12 @@ public class ListenerService {
                             .filter(Optional::isPresent).map(Optional::get)
                             .collect(Collectors.toList()));
 
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime);
+            LOGGER.info("onBlock Timing: {}", (duration / 1000000.0));
+
+
+            startTime = System.nanoTime();
             // RPC for all these in this model...
             // This is busted open so we can throw without defining an interface
             for(int i = 0; i < transactions.size(); i++) {
@@ -204,8 +209,10 @@ public class ListenerService {
                 TransactionReceipt transactionReceipt = ethTransactionReceipt.getTransactionReceipt().get();
 
                 interestingTransactions.addAll(databaseBuilderListener.onTransaction(block, transactionObject, transactionReceipt));
-
             }
+            endTime = System.nanoTime();
+            duration = (endTime - startTime);
+            LOGGER.info("onTransaction Timing: {}", (duration / 1000000));
 
             return interestingTransactions;
         }

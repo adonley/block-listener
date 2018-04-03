@@ -6,6 +6,7 @@ import io.block16.ethlistener.repository.EthereumAddressRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -32,6 +33,7 @@ public class EthereumAddressService {
         return this.ethereumAddressRepository.save(ethereumAddress);
     }
 
+    @Cacheable(cacheNames = {"ethereumAddress"})
     public EthereumAddress getOrCreateByAddress(String address) {
         Optional<EthereumAddress> ethereumAddressOptional = this.ethereumAddressRepository.getByAddress(address);
         if(ethereumAddressOptional.isPresent()) {
