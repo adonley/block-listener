@@ -22,6 +22,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,7 +36,7 @@ public class ListenerService {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private static String processedBlockKey = "listener::ListenerService::latestBlockProcessed";
-    private static int numberOfProcessors = 128;
+    private static int numberOfProcessors = 100;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SetOperations<String, Object> setOperations;
@@ -157,6 +158,8 @@ public class ListenerService {
                 shouldTake = false;
                 LOGGER.error("Issue processing block {}, trying again. Message {}", this.lastProcessedBlock.get() + 1, ex.getMessage());
                 ex.printStackTrace();
+            }  catch(Exception se) {
+                LOGGER.warn("General Exception: " + se.getMessage());
             }
         }
     }

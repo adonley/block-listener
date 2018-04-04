@@ -7,12 +7,12 @@ COPY src /app/src
 COPY build.gradle /app
 COPY gradlew /app
 
-ENV JAR_PREFIX=""
+ENV SPRING_PROFILES_ACTIVE ${SPRING_PROFILES_ACTIVE}
 
 RUN cd /app \
     && ./gradlew clean \
     && ./gradlew build -x test \
-    && cp $(find . -name ${JAR_PREFIX}*.jar) /app.jar \
+    && cp $(find . -name listener*.jar) /app.jar \
     && sh -c 'chmod +x /app.jar' \
     && cd / \
     && rm -rf /app

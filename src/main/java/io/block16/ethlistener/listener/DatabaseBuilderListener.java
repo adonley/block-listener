@@ -9,6 +9,7 @@ import io.block16.ethlistener.service.EthereumAddressService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
@@ -65,7 +66,17 @@ public class DatabaseBuilderListener {
     } */
 
     public List<EthereumTransaction> onTransaction(EthBlock block, EthBlock.TransactionObject transactionObject, TransactionReceipt transactionReceipt) {
-        return this.processReceipts(block, transactionObject, transactionReceipt);
+        boolean succeeded = false;
+        List<EthereumTransaction> transactions = new ArrayList<>();
+        while(!succeeded) {
+            try {
+                transactions = this.processReceipts(block, transactionObject, transactionReceipt);
+                succeeded = true;
+            } catch (DataIntegrityViolationException di) {
+                LOGGER.info("DataIntegrityViolation, trying again: " + di.getMessage());
+            }
+        }
+        return transactions;
     }
 
     List<EthereumTransaction> processBlock(EthBlock ethBlock,
