@@ -50,6 +50,13 @@ io:
 
 spring:
   profiles: prod
+  datasource:
+    url: jdbc:mysql://mysql.internal.block16:3306/listener?useTimezone=true&serverTimezone=UTC
+    username: andrew
+    max-active: 128
+
+redis:
+  hostname: redis.internal.block16
 
 io:
   block16:

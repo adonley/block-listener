@@ -8,6 +8,8 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 @Configuration
 public class RedisConfig {
@@ -17,11 +19,13 @@ public class RedisConfig {
 
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
-        // RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-        // redisStandaloneConfiguration.setHostName(redisHostName);
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(128);
+
         JedisConnectionFactory factory = new JedisConnectionFactory();
         factory.setHostName(redisHostName);
-        // factory.setUsePool(true);
+        factory.setUsePool(true);
+        factory.setPoolConfig(poolConfig);
         return factory;
     }
 
