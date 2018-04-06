@@ -12,5 +12,10 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<EthereumTransaction, Long> {
     @Query(value = "SELECT * FROM ethereum_transaction WHERE to_address = ?1 OR from_address = ?1 OR ethereum_contract = ?1 ORDER BY time DESC LIMIT 10", nativeQuery = true)
-    List<EthereumTransaction> getAllByAddress(Long id);
+    List<EthereumTransaction> getLastTenByAddressId(Long id);
+
+    @Query(value = "SELECT MAX(block_number) FROM ethereum_transaction", nativeQuery = true)
+    Long getLargestBlock();
+    // @Query(value = "SELECT ")
+    // List<EthereumTransaction> getUniqueAssets(Long id);
 }

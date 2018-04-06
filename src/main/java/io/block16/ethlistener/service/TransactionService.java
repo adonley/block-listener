@@ -32,6 +32,10 @@ public class TransactionService {
 
     // @Cacheable(value = "addressTransactions", key = "#ethereumAddress.address")
     public List<EthereumTransaction> getByAddress(EthereumAddress ethereumAddress) {
-        return this.transactionRepository.getAllByAddress(ethereumAddress.getId());
+        return this.transactionRepository.getLastTenByAddressId(ethereumAddress.getId());
+    }
+
+    public Long getLatestBlock() {
+        return this.transactionRepository.getLargestBlock();
     }
 }
