@@ -36,7 +36,7 @@ public class ListenerService {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private static String processedBlockKey = "listener::ListenerService::latestBlockProcessed";
-    private static int numberOfProcessors = 100;
+    private static int numberOfProcessors = 20;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SetOperations<String, Object> setOperations;
