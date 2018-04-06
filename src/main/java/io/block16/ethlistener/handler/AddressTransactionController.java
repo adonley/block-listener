@@ -29,7 +29,7 @@ public class AddressTransactionController {
     }
 
 
-    @GetMapping("/v1/address/{address}")
+    @GetMapping("/v1/address/{address}/transactions")
     public List<EthereumTransaction> transactionsForAddress(@PathVariable String address) {
        Optional<EthereumAddress> ethereumAddress = this.ethereumAddressService.getByAddress(address);
        if(ethereumAddress.isPresent()) {
