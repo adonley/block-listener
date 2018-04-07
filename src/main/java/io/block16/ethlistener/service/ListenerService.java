@@ -71,8 +71,8 @@ public class ListenerService {
         this.web3j = web3j;
         this.transactionService = transactionService;
 
-        Long largestBlock = this.transactionService.getLatestBlock();
-        this.valueOperations.set(processedBlockKey, largestBlock);
+        // Long largestBlock = this.transactionService.getLatestBlock();
+        // this.valueOperations.set(processedBlockKey, largestBlock);
 
         int lastBlockNum = this.valueOperations.get(processedBlockKey) != null ? (Integer) this.valueOperations.get(processedBlockKey) : -1;
         this.lastProcessedBlock = new AtomicInteger(lastBlockNum);

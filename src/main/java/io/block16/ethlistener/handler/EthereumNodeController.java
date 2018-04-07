@@ -1,7 +1,9 @@
 package io.block16.ethlistener.handler;
 
+import io.block16.ethlistener.domain.jpa.EthereumAddress;
 import io.block16.ethlistener.exceptions.BadRequestException;
 import io.block16.ethlistener.exceptions.InternalServerException;
+import io.block16.ethlistener.service.EthereumAddressService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,17 +17,21 @@ import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 public class EthereumNodeController {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private final Web3j web3j;
+    private final EthereumAddressService ethereumAddressService;
 
     @Autowired
     public EthereumNodeController(
+            final EthereumAddressService ethereumAddressService,
             final Web3j web3j
     ) {
+        this.ethereumAddressService = ethereumAddressService;
         this.web3j = web3j;
     }
 
@@ -48,6 +54,7 @@ public class EthereumNodeController {
     @PostMapping(value = "/v1/transaction", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public boolean sendRawTransaction() {
         // TODO: Get transaction, send it and watch it. Might require send watching which is different than address watching
+
         return true;
     }
 }

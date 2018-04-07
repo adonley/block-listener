@@ -40,6 +40,6 @@ public class AddressTransactionController {
 
     @GetMapping("/v1/address/{address}/assets")
     public List<EthereumAddress> assetsForAddress(@PathVariable String address) {
-        return new ArrayList<>();
+        return this.ethereumAddressService.getContractsAssociatedWithAddress(address);
     }
 }

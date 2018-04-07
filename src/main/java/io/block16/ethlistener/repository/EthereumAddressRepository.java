@@ -8,8 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface EthereumAddressRepository extends JpaRepository<EthereumAddress, Long> {
+public interface EthereumAddressRepository extends JpaRepository<EthereumAddress, Long>, EthereumAddressRepositoryCustom {
     Optional<EthereumAddress> getByAddress(String address);
     Optional<EthereumAddress> getFirstByAddress(String address);
-
 }

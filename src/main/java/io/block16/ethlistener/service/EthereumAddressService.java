@@ -10,6 +10,8 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -63,5 +65,13 @@ public class EthereumAddressService {
             ethereumAddress.setIsContract(true);
         }
         return ethereumAddress;
+    }
+
+    public List<EthereumAddress> getContractsAssociatedWithAddress(String address) {
+        Optional<EthereumAddress> ethereumAddressOptional = this.ethereumAddressRepository.getByAddress(address);
+        if(ethereumAddressOptional.isPresent()) {
+            return this.ethereumAddressRepository.getContractAddresses(ethereumAddressOptional.get().getId());
+        }
+        return new ArrayList<>();
     }
 }
