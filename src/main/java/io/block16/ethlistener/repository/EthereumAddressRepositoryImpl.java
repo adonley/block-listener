@@ -19,7 +19,9 @@ public class EthereumAddressRepositoryImpl implements EthereumAddressRepositoryC
     @Override
     public List<EthereumAddress> getContractAddresses(Long id) {
         Query query =
-                entityManager.createNativeQuery("select ethereum_address.* from ethereum_address JOIN ethereum_transaction " +
+                entityManager.createNativeQuery("SELECT ethereum_address.* FROM ethereum_address " +
+                        "JOIN ethereum_transaction FORCE INDEX (ethereum_transaction.ethereum_contract_index, " +
+                        "ethereum_transaction.to_address_index, ethereum_transaction.from_address_index) " +
                         "ON ethereum_transaction.ethereum_contract=ethereum_address.id WHERE to_address = ? OR " +
                         "from_address = ? AND ethereum_contract != NULL;", EthereumAddress.class);
         query.setParameter(1, id);
