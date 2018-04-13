@@ -19,7 +19,7 @@ public class EthereumAddressRepositoryImpl implements EthereumAddressRepositoryC
     @Override
     public List<EthereumAddress> getContractAddresses(Long id) {
         Query query =
-                entityManager.createNativeQuery("SELECT ethereum_address.* FROM ethereum_address " +
+                entityManager.createNativeQuery("SELECT DISTINCT ethereum_address.* FROM ethereum_address " +
                         "JOIN ethereum_transaction ON ethereum_transaction.ethereum_contract=ethereum_address.id WHERE to_address = ? OR " +
                         "from_address = ? AND ethereum_contract IS NOT NULL;", EthereumAddress.class);
         query.setParameter(1, id);
