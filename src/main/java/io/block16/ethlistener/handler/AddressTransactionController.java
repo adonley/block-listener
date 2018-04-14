@@ -1,7 +1,9 @@
 package io.block16.ethlistener.handler;
 
+import io.block16.ethlistener.TokenUtilities;
 import io.block16.ethlistener.domain.jpa.EthereumAddress;
 import io.block16.ethlistener.domain.jpa.EthereumTransaction;
+import io.block16.ethlistener.exceptions.BadRequestException;
 import io.block16.ethlistener.service.EthereumAddressService;
 import io.block16.ethlistener.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +33,23 @@ public class AddressTransactionController {
 
     @GetMapping("/v1/address/{address}/transactions")
     public List<EthereumTransaction> transactionsForAddress(@PathVariable String address) {
-       Optional<EthereumAddress> ethereumAddress = this.ethereumAddressService.getByAddress(address);
-       if(ethereumAddress.isPresent()) {
-           return transactionService.getByAddress(ethereumAddress.get());
-       }
-       return new ArrayList<>();
+        if (!TokenUtilities.isAddress(address)) {
+            throw new BadRequestException("Address " + address + "is not a valid ethereum address.");
+        }
+        String a = TokenUtilities.removeHexPrefix(address).toLowerCase();
+        Optional<EthereumAddress> ethereumAddress = this.ethereumAddressService.getByAddress(a);
+        if (ethereumAddress.isPresent()) {
+            return transactionService.getByAddress(ethereumAddress.get());
+        }
+        return new ArrayList<>();
     }
 
     @GetMapping("/v1/address/{address}/assets")
     public List<EthereumAddress> assetsForAddress(@PathVariable String address) {
-        return this.ethereumAddressService.getContractsAssociatedWithAddress(address);
+        if (!TokenUtilities.isAddress(address)) {
+            throw new BadRequestException("Address " + address + "is not a valid ethereum address.");
+        }
+        String a = TokenUtilities.removeHexPrefix(address).toLowerCase();
+        return this.ethereumAddressService.getContractsAssociatedWithAddress(a);
     }
 }
