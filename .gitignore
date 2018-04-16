@@ -8,6 +8,8 @@ build/
 # Log file
 *.log
 
+deploy.sh
+
 # BlueJ files
 *.ctxt
 

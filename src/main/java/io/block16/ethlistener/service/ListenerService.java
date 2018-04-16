@@ -34,7 +34,7 @@ public class ListenerService {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private static String processedBlockKey = "listener::ListenerService::latestBlockProcessed";
-    private static int numberOfProcessors = 6;
+    private static int numberOfProcessors = 50;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SetOperations<String, Object> setOperations;
@@ -71,6 +71,7 @@ public class ListenerService {
 
         // Long largestBlock = this.transactionService.getLatestBlock();
         // this.valueOperations.set(processedBlockKey, largestBlock);
+        // this.valueOperations.set(processedBlockKey, 5000000L);
 
         int lastBlockNum = this.valueOperations.get(processedBlockKey) != null ? (Integer) this.valueOperations.get(processedBlockKey) : -1;
         this.lastProcessedBlock = new AtomicInteger(lastBlockNum);
