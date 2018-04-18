@@ -17,7 +17,6 @@ import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 public class EthereumNodeController {
