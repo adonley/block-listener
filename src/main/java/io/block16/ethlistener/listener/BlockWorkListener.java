@@ -67,12 +67,15 @@ public class BlockWorkListener {
             throw new IllegalStateException("Receipts size was not the same as TX size.");
         }
 
+
         FullBlockDto blockDto = new FullBlockDto();
         blockDto.setBlock(block.getBlock());
         blockDto.setUnclesList(unclesList.stream().map(EthBlock::getBlock).collect(toList()));
         blockDto.setReceipts(receipts);
         blockDto.setTransactions(transactions.stream().map(t -> (Transaction)t).collect(toList()));
 
+        /*
         this.rabbitTemplate.convertAndSend(RabbitConfig.PERSIST_BLOCK_EXCHANGE, RabbitConfig.PERSIST_ROUTING_KEY, objectMapper.writeValueAsString(blockDto));
+        */
     }
 }

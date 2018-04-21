@@ -9,34 +9,29 @@ spring:
 logging.level.org.hibernate.SQL: debug
 
 server:
-  port: 8081
+  port: 8082
+
+io:
+  block16:
+    concurrency: 50
 
 ---
 
 spring:
   profiles: default
-  datasource:
-    url: jdbc:mysql://localhost:3306/listener?useTimezone=true&serverTimezone=UTC&useSSL=false
-    username: root
-    password:
 
 redis:
   hostname: localhost
 
 io:
   block16:
-    nodeLocation: https://mainnet.infura.io/mMVAl9ZCBbtZ4sc0fBbO
+    nodeLocation: https://mainnet.infura.io/mMKKl8ZdBbtZ4sc0fBBO
 
 
 ---
 
 spring:
   profiles: compose
-  datasource:
-    url: jdbc:mysql://mysql:3306/listener?useTimezone=true&serverTimezone=UTC&useSSL=false
-    username: root
-    password:
-
 redis:
   hostname: redis
 
@@ -48,10 +43,6 @@ io:
 
 spring:
   profiles: prod
-  datasource:
-    url: jdbc:mysql://mysql.internal.block16:3306/listener?useTimezone=true&serverTimezone=UTC&useSSL=false
-    username: andrew
-    max-active: 128
 
 redis:
   hostname: redis.internal.block16

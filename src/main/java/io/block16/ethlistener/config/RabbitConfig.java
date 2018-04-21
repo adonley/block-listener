@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.task.TaskExecutor;
 import org.web3j.protocol.Web3j;
 
 @Configuration
@@ -41,6 +42,9 @@ public class RabbitConfig {
 
     @Value("${amqp.host:localhost}")
     private String host = "localhost";
+
+    @Value("${io.block16.concurrency}")
+    private int concurrency;
 
     @Bean
     public ConnectionFactory connectionFactory() {
@@ -78,15 +82,20 @@ public class RabbitConfig {
     }
 
     @Bean
-    public SimpleMessageListenerContainer listenerContainer(RabbitTemplate rabbitTemplate, Web3j web3j) {
+    public SimpleMessageListenerContainer listenerContainer(RabbitTemplate rabbitTemplate, Web3j web3j, TaskExecutor taskExecutor) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory());
         container.setQueueNames(BLOCK_WORK_QUEUE_NAME);
-        container.setMaxConcurrentConsumers(10);
+        container.setMaxConcurrentConsumers(concurrency);
+        container.setPrefetchCount(20);
+        container.setTaskExecutor(taskExecutor);
+        container.setConsecutiveActiveTrigger(1);
+        container.setExclusive(false);
         MessageListenerAdapter listenerAdapter =
                 new MessageListenerAdapter(new BlockWorkListener(web3j, rabbitTemplate), new BlockWorkMessageConverter());
         listenerAdapter.setDefaultListenerMethod("onWork");
         container.setMessageListener(listenerAdapter);
+        // container.set
         return container;
     }
 }
