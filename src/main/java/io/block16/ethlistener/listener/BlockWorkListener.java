@@ -3,8 +3,7 @@ package io.block16.ethlistener.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.block16.ethlistener.config.RabbitConfig;
-import io.block16.ethlistener.dto.BlockWorkDto;
-import io.block16.ethlistener.dto.FullBlockDto;
+import io.block16.ethlistener.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -67,15 +66,11 @@ public class BlockWorkListener {
             throw new IllegalStateException("Receipts size was not the same as TX size.");
         }
 
-
         FullBlockDto blockDto = new FullBlockDto();
-        blockDto.setBlock(block.getBlock());
-        blockDto.setUnclesList(unclesList.stream().map(EthBlock::getBlock).collect(toList()));
-        blockDto.setReceipts(receipts);
-        blockDto.setTransactions(transactions.stream().map(t -> (Transaction)t).collect(toList()));
-
-        /*
+        blockDto.setBlock(FetchedBlockDTO.fromWeb3Block(block.getBlock()));
+        blockDto.setUnclesList(unclesList.stream().map(EthBlock::getBlock).map(FetchedBlockDTO::fromWeb3Block).collect(toList()));
+        blockDto.setReceipts(receipts.stream().map(FetchedTxReceiptDTO::fromWeb3Receipt).collect(toList()));
+        blockDto.setTransactions(transactions.stream().map(FetchedTxDTO::fromWeb3Tx).collect(toList()));
         this.rabbitTemplate.convertAndSend(RabbitConfig.PERSIST_BLOCK_EXCHANGE, RabbitConfig.PERSIST_ROUTING_KEY, objectMapper.writeValueAsString(blockDto));
-        */
     }
 }

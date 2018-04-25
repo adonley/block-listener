@@ -9,8 +9,8 @@ import java.util.List;
 
 @Data
 public class FullBlockDto {
-    EthBlock.Block block;
-    List<EthBlock.Block> unclesList;
-    List<Transaction> transactions;
-    List<TransactionReceipt> receipts;
+    FetchedBlockDTO block;
+    List<FetchedBlockDTO> unclesList;
+    List<FetchedTxDTO> transactions;
+    List<FetchedTxReceiptDTO> receipts;
 }
