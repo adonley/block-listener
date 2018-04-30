@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.block16.ethlistener.TokenUtilities.TOKEN_TRANSFER_HASH;
+import static io.block16.ethlistener.EthereumUtilities.TOKEN_TRANSFER_HASH;
 
 @Data
 public class EthereumEvent {
