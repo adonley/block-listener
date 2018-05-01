@@ -2,6 +2,8 @@ package io.block16.ethlistener.config;
 
 import io.block16.ethlistener.listener.BlockWorkListener;
 import io.block16.ethlistener.listener.BlockWorkMessageConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -20,6 +22,8 @@ import org.web3j.protocol.Web3j;
 @Configuration
 @Import(Web3jConfig.class)
 public class RabbitConfig {
+    private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+
     public static String BLOCK_WORK_EXCHANGE = "listener.block.exchange";
     public static String BLOCK_WORK_QUEUE_NAME = "listener.block.queue";
     public static String BLOCK_ROUTING_KEY = "";
@@ -45,6 +49,9 @@ public class RabbitConfig {
 
     @Value("${io.block16.concurrency}")
     private int concurrency;
+
+    @Value("${io.block16.nodeLocation}")
+    private String nodeLocation;
 
     @Bean
     public ConnectionFactory connectionFactory() {
@@ -83,11 +90,12 @@ public class RabbitConfig {
 
     @Bean
     public SimpleMessageListenerContainer listenerContainer(RabbitTemplate rabbitTemplate, Web3j web3j, TaskExecutor taskExecutor) {
+        LOGGER.info("Using: " + nodeLocation + " for blockchain related info");
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory());
         container.setQueueNames(BLOCK_WORK_QUEUE_NAME);
         container.setMaxConcurrentConsumers(concurrency);
-        container.setPrefetchCount(20);
+        container.setPrefetchCount(1);
         container.setTaskExecutor(taskExecutor);
         container.setConsecutiveActiveTrigger(1);
         container.setExclusive(false);
