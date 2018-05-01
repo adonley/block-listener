@@ -1,4 +1,4 @@
-package io.block16.ethlistener.config;
+/*package io.block16.ethlistener.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,3 +47,4 @@ public class RedisConfig {
         return redisTemplate;
     }
 }
+*/
