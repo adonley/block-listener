@@ -2,6 +2,7 @@ package io.block16.ethlistener.listener;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 import io.block16.ethlistener.config.RabbitConfig;
 import io.block16.ethlistener.dto.*;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import static java.util.stream.Collectors.toList;
 
 public class BlockWorkListener {
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+    private static RateLimiter rateLimiter = RateLimiter.create(5); // rateLimiter.tryAcquire(2, 10,TimeUnit.MILLISECONDS);
     private static ObjectMapper objectMapper = new ObjectMapper();
     private final RabbitTemplate rabbitTemplate;
     private final Web3j web3j;
@@ -71,6 +73,9 @@ public class BlockWorkListener {
         blockDto.setUnclesList(unclesList.stream().map(EthBlock::getBlock).map(FetchedBlockDTO::fromWeb3Block).collect(toList()));
         blockDto.setReceipts(receipts.stream().map(FetchedTxReceiptDTO::fromWeb3Receipt).collect(toList()));
         blockDto.setTransactions(transactions.stream().map(FetchedTxDTO::fromWeb3Tx).collect(toList()));
+
+        rateLimiter.acquire();
+
         this.rabbitTemplate.convertAndSend(RabbitConfig.PERSIST_BLOCK_EXCHANGE, RabbitConfig.PERSIST_ROUTING_KEY, objectMapper.writeValueAsString(blockDto));
     }
 }

@@ -3,7 +3,7 @@ server:
 
 io:
   block16:
-    concurrency: 50
+    concurrency: 10
 
 ---
 

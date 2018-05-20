@@ -1,5 +1,6 @@
 package io.block16.ethlistener.config;
 
+import com.google.common.util.concurrent.RateLimiter;
 import io.block16.ethlistener.listener.BlockWorkListener;
 import io.block16.ethlistener.listener.BlockWorkMessageConverter;
 import org.slf4j.Logger;
@@ -95,7 +96,7 @@ public class RabbitConfig {
         container.setConnectionFactory(connectionFactory());
         container.setQueueNames(BLOCK_WORK_QUEUE_NAME);
         container.setMaxConcurrentConsumers(concurrency);
-        container.setPrefetchCount(1);
+        container.setPrefetchCount(100);
         container.setTaskExecutor(taskExecutor);
         container.setConsecutiveActiveTrigger(1);
         container.setExclusive(false);
@@ -103,7 +104,6 @@ public class RabbitConfig {
                 new MessageListenerAdapter(new BlockWorkListener(web3j, rabbitTemplate), new BlockWorkMessageConverter());
         listenerAdapter.setDefaultListenerMethod("onWork");
         container.setMessageListener(listenerAdapter);
-        // container.set
         return container;
     }
 }
