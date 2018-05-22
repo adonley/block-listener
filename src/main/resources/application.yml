@@ -1,7 +1,7 @@
 
 io:
   block16:
-    concurrency: 10
+    concurrency: 8
 
 ---
 

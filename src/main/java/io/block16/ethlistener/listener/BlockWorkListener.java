@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.toList;
 
 public class BlockWorkListener {
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-    private static RateLimiter rateLimiter = RateLimiter.create(5); // rateLimiter.tryAcquire(2, 10,TimeUnit.MILLISECONDS);
+    private static RateLimiter rateLimiter = RateLimiter.create(10); // rateLimiter.tryAcquire(2, 10,TimeUnit.MILLISECONDS);
     private static ObjectMapper objectMapper = new ObjectMapper();
     private final RabbitTemplate rabbitTemplate;
     private final Web3j web3j;
