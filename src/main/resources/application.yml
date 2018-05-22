@@ -11,7 +11,7 @@ spring:
 io:
   block16:
 #    nodeLocation: https://mainnet.infura.io/mMKKl8ZdBbtZ4sc0fBBO
-    nodeLocation: http://localhost:8546
+    nodeLocation: https://mainnet.infura.io/rN9AdvkVRuc7HkkUJbnl
 
 server:
   port: 8082
