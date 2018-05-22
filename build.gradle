@@ -31,7 +31,6 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.amqp:spring-rabbit')
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.9'
     // compile('org.flywaydb:flyway-core')
     // runtime('mysql:mysql-connector-java')
