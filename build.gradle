@@ -30,8 +30,7 @@ ext {
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-web')
-    // compile('org.springframework.boot:spring-boot-starter-data-redis')
-    // compile("org.springframework.boot:spring-boot-starter-cache")
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.0.1.RELEASE'
     compile('org.springframework.amqp:spring-rabbit')
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.9'

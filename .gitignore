@@ -119,3 +119,7 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+register_task.sh
+register_service.sh
+task.json
+
