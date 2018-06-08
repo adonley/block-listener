@@ -31,7 +31,7 @@ public class RabbitConfig {
 
     public static String PERSIST_BLOCK_EXCHANGE = "listener.persist.exchange";
     public static String PERSIST_BLOCK_QUEUE = "listener.persist.queue";
-    public static String PERSIST_ROUTING_KEY = "sqljam";
+    public static String PERSIST_ROUTING_KEY = "";
 
     @Value("${amqp.port:5672}")
     private int port = 5672;

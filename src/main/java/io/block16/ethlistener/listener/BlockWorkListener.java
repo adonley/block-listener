@@ -74,7 +74,7 @@ public class BlockWorkListener {
         blockDto.setReceipts(receipts.stream().map(FetchedTxReceiptDTO::fromWeb3Receipt).collect(toList()));
         blockDto.setTransactions(transactions.stream().map(FetchedTxDTO::fromWeb3Tx).collect(toList()));
 
-        // rateLimiter.acquire();
+        rateLimiter.acquire();
 
         this.rabbitTemplate.convertAndSend(RabbitConfig.PERSIST_BLOCK_EXCHANGE, RabbitConfig.PERSIST_ROUTING_KEY, objectMapper.writeValueAsString(blockDto));
     }
