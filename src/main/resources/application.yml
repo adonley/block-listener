@@ -1,7 +1,7 @@
 
 io:
   block16:
-    concurrency: 40
+    concurrency: 100
 
 ---
 
@@ -11,7 +11,7 @@ spring:
 io:
   block16:
 #    nodeLocation: https://mainnet.infura.io/mMKKl8ZdBbtZ4sc0fBBO
-    nodeLocation: https://mainnet.infura.io/rN9AdvkVRuc7HkkUJbnl
+    nodeLocation: http://localhost:8545
 
 server:
   port: 8082
