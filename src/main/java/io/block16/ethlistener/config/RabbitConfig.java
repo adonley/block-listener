@@ -72,6 +72,11 @@ public class RabbitConfig {
         return new DirectExchange(PERSIST_BLOCK_EXCHANGE, true, false);
     } */
 
+    @Bean
+    public FanoutExchange persistBlockExchange() {
+        return new FanoutExchange(BROADCAST_BLOCK_EXCHANGE, false, true);
+    }
+
     /**
      * @return the admin bean that can declare queues etc.
      */
