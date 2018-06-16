@@ -77,5 +77,6 @@ public class BlockWorkListener {
         rateLimiter.acquire();
 
         this.rabbitTemplate.convertAndSend(RabbitConfig.PERSIST_BLOCK_EXCHANGE, RabbitConfig.PERSIST_ROUTING_KEY, objectMapper.writeValueAsString(blockDto));
+        this.rabbitTemplate.convertAndSend(RabbitConfig.BROADCAST_BLOCK_EXCHANGE, RabbitConfig.BLOCK_ROUTING_KEY, objectMapper.writeValueAsString(blockDto));
     }
 }

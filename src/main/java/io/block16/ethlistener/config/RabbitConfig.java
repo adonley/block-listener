@@ -33,6 +33,9 @@ public class RabbitConfig {
     public static String PERSIST_BLOCK_QUEUE = "listener.persist.queue";
     public static String PERSIST_ROUTING_KEY = "";
 
+    public static String BROADCAST_BLOCK_EXCHANGE = "broadcast.exchange";
+    public static String BROADCAST_ROUTING_KEY = "";
+
     @Value("${amqp.port:5672}")
     private int port = 5672;
 
@@ -64,10 +67,10 @@ public class RabbitConfig {
         return connectionFactory;
     }
 
-    @Bean
+    /* @Bean
     public DirectExchange blockWorkExchange() {
         return new DirectExchange(PERSIST_BLOCK_EXCHANGE, true, false);
-    }
+    } */
 
     /**
      * @return the admin bean that can declare queues etc.
@@ -79,15 +82,15 @@ public class RabbitConfig {
         return rabbitAdmin;
     }
 
-    @Bean
+    /* @Bean
     public Queue queue() {
         return new Queue(PERSIST_BLOCK_QUEUE);
-    }
+    } */
 
-    @Bean
+    /* @Bean
     public Binding binding() {
         return BindingBuilder.bind(queue()).to(blockWorkExchange()).with(PERSIST_ROUTING_KEY);
-    }
+    } */
 
     @Bean
     public SimpleMessageListenerContainer listenerContainer(RabbitTemplate rabbitTemplate, Web3j web3j, TaskExecutor taskExecutor) {
